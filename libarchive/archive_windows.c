@@ -348,7 +348,7 @@ __la_open(const char *path, int flags, ...)
 		   TODO: Fix mode of new file.  */
 		r = _open(path, flags);
 #else
-		r = _open(path, flags, pmode);
+		errno = _sopen_s(&r, path, flags, _SH_DENYNO, pmode);
 #endif
 		if (r < 0 && errno == EACCES && (flags & O_CREAT) != 0) {
 			/* Simulate other POSIX system action to pass our test suite. */
@@ -369,7 +369,7 @@ __la_open(const char *path, int flags, ...)
 			return (-1);
 		}
 	}
-	r = _wopen(ws, flags, pmode);
+	errno = _wsopen_s(&r, ws, flags, _SH_DENYNO, pmode);
 	if (r < 0 && errno == EACCES && (flags & O_CREAT) != 0) {
 		/* Simulate other POSIX system action to pass our test suite. */
 		attr = GetFileAttributesW(ws);
@@ -381,6 +381,70 @@ __la_open(const char *path, int flags, ...)
 			errno = EACCES;
 	}
 	free(ws);
+	return (r);
+}
+
+int
+__la_wopen(const wchar_t *path, int flags, ...)
+{
+	va_list ap;
+	wchar_t *fullpath;
+	int r, pmode;
+	DWORD attr;
+
+	va_start(ap, flags);
+	pmode = va_arg(ap, int);
+	va_end(ap);
+	fullpath = NULL;
+	if ((flags & ~O_BINARY) == O_RDONLY) {
+		/*
+		 * When we open a directory, _open function returns
+		 * "Permission denied" error.
+		 */
+		attr = GetFileAttributesW(path);
+		if (attr == (DWORD)-1 && GetLastError() == ERROR_PATH_NOT_FOUND) {
+			fullpath = __la_win_permissive_name_w(path);
+			if (fullpath == NULL) {
+				errno = EINVAL;
+				return (-1);
+			}
+			path = fullpath;
+			attr = GetFileAttributesW(fullpath);
+		}
+		if (attr == (DWORD)-1) {
+			la_dosmaperr(GetLastError());
+			free(fullpath);
+			return (-1);
+		}
+		if (attr & FILE_ATTRIBUTE_DIRECTORY) {
+			HANDLE handle;
+
+			handle = CreateFileW(path, 0, 0, NULL,
+			    OPEN_EXISTING,
+			    FILE_FLAG_BACKUP_SEMANTICS |
+			    FILE_ATTRIBUTE_READONLY,
+				NULL);
+			free(fullpath);
+			if (handle == INVALID_HANDLE_VALUE) {
+				la_dosmaperr(GetLastError());
+				return (-1);
+			}
+			r = _open_osfhandle((intptr_t)handle, _O_RDONLY);
+			return (r);
+		}
+	}
+	errno = _wsopen_s(&r, path, flags, _SH_DENYNO, pmode);
+	if (r < 0 && errno == EACCES && (flags & O_CREAT) != 0) {
+		/* Simulate other POSIX system action to pass our test suite. */
+		attr = GetFileAttributesW(path);
+		if (attr == (DWORD)-1)
+			la_dosmaperr(GetLastError());
+		else if (attr & FILE_ATTRIBUTE_DIRECTORY)
+			errno = EISDIR;
+		else
+			errno = EACCES;
+	}
+	free(fullpath);
 	return (r);
 }
 

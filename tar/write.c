@@ -128,7 +128,32 @@ seek_file(int fd, int64_t offset, int whence)
 	return (SetFilePointerEx((HANDLE)_get_osfhandle(fd),
 		distance, NULL, FILE_BEGIN) ? 1 : -1);
 }
-#define	open _open
+
+static int
+_open_wrap_secure(char const *const path, int const oflag, ...)
+{
+	va_list ap;
+	int r, pmode, error;
+
+	pmode = 0;
+	if (oflag & _O_CREAT)
+	{
+		va_start(ap, oflag);
+		pmode = va_arg(ap, int);
+		va_end(ap);
+	}
+
+	error = _sopen_s(&r, path, oflag, _SH_DENYNO, pmode & 0600);
+	if (error != 0)
+	{
+		errno = error;
+		return -1;
+	}
+
+	return r;
+}
+
+#define	open _open_wrap_secure
 #define	close _close
 #define	read _read
 #ifdef lseek

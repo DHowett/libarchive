@@ -1,4 +1,5 @@
 @ECHO OFF
+SETLOCAL ENABLEDELAYEDEXPANSION
 SET ZLIB_VERSION=1.3
 SET BZIP2_VERSION=1ea1ac188ad4b9cb662e3f8314673c63df95a589
 SET XZ_VERSION=5.4.4
@@ -23,7 +24,20 @@ IF "%BE%"=="mingw-gcc" (
   SET MINGWPATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files\cmake\bin;C:\ProgramData\mingw64\mingw64\bin
 )
 
+IF "%BE%"=="msvc" (
+  FOR /F "tokens=* USEBACKQ" %%F IN (`vswhere -latest -requires Microsoft.VisualStudio.Component.Vcpkg -property installationPath`) DO (
+    SET VCPKG_ROOT=%%F\VC\vcpkg
+  )
+)
+
 IF "%1"=="deplibs" (
+  IF "%BE%"=="msvc" (
+    IF "%VCPKG_ROOT%" NEQ "" (
+      REM -- We will build dependencies using vcpkg later
+      ECHO "Installing dependencies during configure step using vcpkg"
+      GOTO :EOF
+    )
+  )
   IF NOT EXIST build_ci\libs (
     MKDIR build_ci\libs
   )
@@ -120,7 +134,11 @@ IF "%1"=="deplibs" (
   ) ELSE IF "%BE%"=="msvc" (
     MKDIR build_ci\cmake
     CD build_ci\cmake
-    cmake -G "Visual Studio 17 2022" -D CMAKE_BUILD_TYPE="Release" -D ZLIB_LIBRARY="C:/Program Files (x86)/zlib/lib/zlibstatic.lib" -D ZLIB_INCLUDE_DIR="C:/Program Files (x86)/zlib/include" -D BZIP2_LIBRARIES="C:/Program Files (x86)/bzip2/lib/bz2_static.lib" -D BZIP2_INCLUDE_DIR="C:/Program Files (x86)/bzip2/include" -D LIBLZMA_LIBRARY="C:/Program Files (x86)/xz/lib/liblzma.lib" -D LIBLZMA_INCLUDE_DIR="C:/Program Files (x86)/xz/include" -D ZSTD_LIBRARY="C:/Program Files (x86)/zstd/lib/zstd_static.lib" -D ZSTD_INCLUDE_DIR="C:/Program Files (x86)/zstd/include" ..\.. || EXIT /b 1
+    IF "%VCPKG_ROOT%" NEQ "" (
+      cmake -G "Visual Studio 17 2022" -D CMAKE_BUILD_TYPE="Release" --toolchain "%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -D VCPKG_TARGET_TRIPLET=x64-windows-static -D VCPKG_MANIFEST_DIR=%GITHUB_WORKSPACE%\build\ci\github_actions ..\.. || EXIT /b 1
+    ) ELSE (
+      cmake -G "Visual Studio 17 2022" -D CMAKE_BUILD_TYPE="Release" -D ZLIB_LIBRARY="C:/Program Files (x86)/zlib/lib/zlibstatic.lib" -D ZLIB_INCLUDE_DIR="C:/Program Files (x86)/zlib/include" -D BZIP2_LIBRARIES="C:/Program Files (x86)/bzip2/lib/bz2_static.lib" -D BZIP2_INCLUDE_DIR="C:/Program Files (x86)/bzip2/include" -D LIBLZMA_LIBRARY="C:/Program Files (x86)/xz/lib/liblzma.lib" -D LIBLZMA_INCLUDE_DIR="C:/Program Files (x86)/xz/include" -D ZSTD_LIBRARY="C:/Program Files (x86)/zstd/lib/zstd_static.lib" -D ZSTD_INCLUDE_DIR="C:/Program Files (x86)/zstd/include" ..\.. || EXIT /b 1
+    )
   )
 ) ELSE IF "%1%"=="build" (
   IF "%BE%"=="mingw-gcc" (

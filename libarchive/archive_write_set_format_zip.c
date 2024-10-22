@@ -453,7 +453,7 @@ archive_write_zip_options(struct archive_write *a, const char *key,
 			zip->threads = sysconf(_SC_NPROCESSORS_ONLN);
 #elif !defined(__CYGWIN__) && defined(_WIN32_WINNT) && _WIN32_WINNT >= 0x0601
 			/* Windows 7 and up */
-			zip->threads = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS);
+			zip->threads = (short)GetActiveProcessorCount(ALL_PROCESSOR_GROUPS);
 #else
 			zip->threads = 1;
 #endif
@@ -1376,7 +1376,7 @@ archive_write_zip_header(struct archive_write *a, struct archive_entry *entry)
 			? ZSTD_minCLevel() // ZSTD_minCLevel is negative !
 			: (zip->compression_level - 1) * ZSTD_maxCLevel() / 8;
 		zip->stream.zstd.context = ZSTD_createCStream();
-		ret = ZSTD_initCStream(zip->stream.zstd.context, zstd_compression_level);
+		ret = (int)ZSTD_initCStream(zip->stream.zstd.context, zstd_compression_level);
 		if (ZSTD_isError(ret)) {
 			archive_set_error(&a->archive, ENOMEM,
 			    "Can't init zstd compressor");
@@ -1486,7 +1486,7 @@ archive_write_zip_header(struct archive_write *a, struct archive_entry *entry)
 static ssize_t
 archive_write_zip_data(struct archive_write *a, const void *buff, size_t s)
 {
-	int ret;
+	ssize_t ret;
 	struct zip *zip = a->format_data;
 
 	if ((int64_t)s > zip->entry_uncompressed_limit)
@@ -1923,7 +1923,7 @@ archive_write_zip_finish_entry(struct archive_write *a)
 		do {
 			size_t remainder;
 
-			ret = ZSTD_endStream(zip->stream.zstd.context, &zip->stream.zstd.out);
+			ret = (int)ZSTD_endStream(zip->stream.zstd.context, &zip->stream.zstd.out);
 			if (ret == 0)
 				finishing = 0;
 			else if (ZSTD_isError(ret))

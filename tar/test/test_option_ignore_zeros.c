@@ -68,6 +68,11 @@ DEFINE_TEST(test_option_ignore_zeros_mode_x)
 	assertEqualFile("out/b", "in/b");
 }
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#pragma warning(push)
+#pragma warning(disable: 4702) // Code in the below test is unreachable on Windows; however, the pragma applies to the function
+#endif
+
 DEFINE_TEST(test_option_ignore_zeros_mode_c)
 {
 #if defined(_WIN32) && !defined(__CYGWIN__)
@@ -76,6 +81,7 @@ DEFINE_TEST(test_option_ignore_zeros_mode_c)
 	// bsdtar.exe: b: Can't translate uname '(null)' to UTF-8
 	skipping("TODO: figure out why this test fails on github workflows with MSVC");
 	return;
+#pragma warning(pop)
 #endif
 
 	if (make_files())

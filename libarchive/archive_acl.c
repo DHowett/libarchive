@@ -32,9 +32,7 @@
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
 #endif
-#ifdef HAVE_WCHAR_H
 #include <wchar.h>
-#endif
 
 #include "archive_acl_private.h"
 #include "archive_entry.h"

@@ -53,9 +53,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_WCHAR_H
 #include <wchar.h>
-#endif
 #if defined(_WIN32) && !defined(__CYGWIN__)
 #include <windows.h>
 #include <locale.h>
@@ -779,7 +777,7 @@ archive_string_append_from_wcs_in_codepage(struct archive_string *as,
 	return (defchar_used?-1:ret);
 }
 
-#elif defined(HAVE_WCTOMB) || defined(HAVE_WCRTOMB)
+#else
 
 /*
  * Translates a wide character string into current locale character set
@@ -799,14 +797,9 @@ archive_string_append_from_wcs(struct archive_string *as,
 	int n, ret_val = 0;
 	char *p;
 	char *end;
-#if HAVE_WCRTOMB
 	mbstate_t shift_state;
 
 	memset(&shift_state, 0, sizeof(shift_state));
-#else
-	/* Clear the shift state before starting. */
-	wctomb(NULL, L'\0');
-#endif
 	/*
 	 * Allocate buffer for MBS.
 	 * We need this allocation here since it is possible that
@@ -829,11 +822,7 @@ archive_string_append_from_wcs(struct archive_string *as,
 			p = as->s + as->length;
 			end = as->s + as->buffer_length - MB_CUR_MAX -1;
 		}
-#if HAVE_WCRTOMB
 		n = wcrtomb(p, *w++, &shift_state);
-#else
-		n = wctomb(p, *w++);
-#endif
 		if (n == -1) {
 			if (errno == EILSEQ) {
 				/* Skip an illegal wide char. */
@@ -851,27 +840,6 @@ archive_string_append_from_wcs(struct archive_string *as,
 	as->s[as->length] = '\0';
 	return (ret_val);
 }
-
-#else /* HAVE_WCTOMB || HAVE_WCRTOMB */
-
-/*
- * TODO: Test if __STDC_ISO_10646__ is defined.
- * Non-Windows uses ISO C wcrtomb() or wctomb() to perform the conversion
- * one character at a time.  If a non-Windows platform doesn't have
- * either of these, fall back to the built-in UTF8 conversion.
- */
-int
-archive_string_append_from_wcs(struct archive_string *as,
-    const wchar_t *w, size_t len)
-{
-	(void)as;/* UNUSED */
-	(void)w;/* UNUSED */
-	(void)len;/* UNUSED */
-	errno = ENOSYS;
-	return (-1);
-}
-
-#endif /* HAVE_WCTOMB || HAVE_WCRTOMB */
 
 /*
  * Find a string conversion object by a pair of 'from' charset name
@@ -3431,14 +3399,9 @@ strncat_from_utf8_libarchive2(struct archive_string *as,
 	char *p;
 	char *end;
 	uint32_t unicode;
-#if HAVE_WCRTOMB
 	mbstate_t shift_state;
 
 	memset(&shift_state, 0, sizeof(shift_state));
-#else
-	/* Clear the shift state before starting. */
-	wctomb(NULL, L'\0');
-#endif
 	(void)sc; /* UNUSED */
 	/*
 	 * Allocate buffer for MBS.
@@ -3480,11 +3443,7 @@ strncat_from_utf8_libarchive2(struct archive_string *as,
 		/*
 		 * Translates the wide-character into the current locale MBS.
 		 */
-#if HAVE_WCRTOMB
 		n = (int)wcrtomb(p, wc, &shift_state);
-#else
-		n = (int)wctomb(p, wc);
-#endif
 		if (n == -1)
 			return (-1);
 		p += n;

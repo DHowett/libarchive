@@ -33,12 +33,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_WCTYPE_H
 #include <wctype.h>
-#else
-/* If we don't have wctype, we need to hack up some version of iswprint(). */
-#define	iswprint isprint
-#endif
 
 #include "bsdtar.h"
 #include "err.h"

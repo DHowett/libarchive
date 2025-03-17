@@ -872,30 +872,6 @@
 /* Define to 1 if you have the `vprintf' function. */
 #define HAVE_VPRINTF 1
 
-/* Define to 1 if you have the <wchar.h> header file. */
-#define HAVE_WCHAR_H 1
-
-/* Define to 1 if the system has the type `wchar_t'. */
-#define HAVE_WCHAR_T 1
-
-/* Define to 1 if you have the `wcrtomb' function. */
-#define HAVE_WCRTOMB 1
-
-/* Define to 1 if you have the `wcscmp' function. */
-#define HAVE_WCSCMP 1
-
-/* Define to 1 if you have the `wcscpy' function. */
-#define HAVE_WCSCPY 1
-
-/* Define to 1 if you have the `wcslen' function. */
-#define HAVE_WCSLEN 1
-
-/* Define to 1 if you have the `wctomb' function. */
-#define HAVE_WCTOMB 1
-
-/* Define to 1 if you have the <wctype.h> header file. */
-#define HAVE_WCTYPE_H 1
-
 /* Define to 1 if you have the <wincrypt.h> header file. */
 #define HAVE_WINCRYPT_H 1
 

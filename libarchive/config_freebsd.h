@@ -226,14 +226,6 @@
 #define HAVE_UTIME_H 1
 #define HAVE_VFORK 1
 #define HAVE_VPRINTF 1
-#define HAVE_WCHAR_H 1
-#define HAVE_WCHAR_T 1
-#define HAVE_WCRTOMB 1
-#define HAVE_WCSCMP 1
-#define HAVE_WCSCPY 1
-#define HAVE_WCSLEN 1
-#define HAVE_WCTOMB 1
-#define HAVE_WCTYPE_H 1
 #define HAVE_ZLIB_H 1
 #define HAVE_SYS_TIME_H 1
 

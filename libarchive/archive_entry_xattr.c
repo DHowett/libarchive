@@ -55,9 +55,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_WCHAR_H
 #include <wchar.h>
-#endif
 
 #include "archive.h"
 #include "archive_entry.h"

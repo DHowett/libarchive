@@ -30,16 +30,6 @@
 #include <linux/fs.h>   /* for Linux file flags */
 #endif
 
-#ifndef HAVE_WCSCPY
-static wchar_t * wcscpy(wchar_t *s1, const wchar_t *s2)
-{
-	wchar_t *dest = s1;
-	while ((*s1 = *s2) != L'\0')
-		++s1, ++s2;
-	return dest;
-}
-#endif
-
 /*
  * Most of these tests are system-independent, though a few depend on
  * features of the local system.  Such tests are conditionalized on

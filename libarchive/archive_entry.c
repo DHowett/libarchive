@@ -66,9 +66,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_WCHAR_H
 #include <wchar.h>
-#endif
 
 #include "archive.h"
 #include "archive_acl_private.h"
@@ -120,25 +118,6 @@ static const wchar_t	*ae_wcstofflags(const wchar_t *stringp,
 		    unsigned long *setp, unsigned long *clrp);
 static const char	*ae_strtofflags(const char *stringp, size_t length,
 		    unsigned long *setp, unsigned long *clrp);
-
-#ifndef HAVE_WCSCPY
-static wchar_t * wcscpy(wchar_t *s1, const wchar_t *s2)
-{
-	wchar_t *dest = s1;
-	while ((*s1 = *s2) != L'\0')
-		++s1, ++s2;
-	return dest;
-}
-#endif
-#ifndef HAVE_WCSLEN
-static size_t wcslen(const wchar_t *s)
-{
-	const wchar_t *p = s;
-	while (*p != L'\0')
-		++p;
-	return p - s;
-}
-#endif
 
 /****************************************************************************
  *

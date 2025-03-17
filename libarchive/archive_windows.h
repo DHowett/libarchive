@@ -287,7 +287,7 @@ extern void __la_dosmaperr(unsigned long e);
 extern struct archive_entry *__la_win_entry_in_posix_pathseparator(
     struct archive_entry *);
 
-#if defined(HAVE_WCRTOMB) && defined(__BORLANDC__)
+#if defined(__BORLANDC__)
 typedef int mbstate_t;
 size_t wcrtomb(char *, wchar_t, mbstate_t *);
 #endif

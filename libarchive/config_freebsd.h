@@ -234,9 +234,6 @@
 #define HAVE_WCSLEN 1
 #define HAVE_WCTOMB 1
 #define HAVE_WCTYPE_H 1
-#define HAVE_WMEMCMP 1
-#define HAVE_WMEMCPY 1
-#define HAVE_WMEMMOVE 1
 #define HAVE_ZLIB_H 1
 #define HAVE_SYS_TIME_H 1
 

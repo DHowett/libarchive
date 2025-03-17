@@ -43,11 +43,6 @@
 #undef max
 #define	max(a, b)	((a)>(b)?(a):(b))
 
-#ifndef HAVE_WMEMCMP
-/* Good enough for simple equality testing, but not for sorting. */
-#define wmemcmp(a,b,i)  memcmp((a), (b), (i) * sizeof(wchar_t))
-#endif
-
 static int	acl_special(struct archive_acl *acl,
 		    int type, int permset, int tag);
 static struct archive_acl_entry *acl_new_entry(struct archive_acl *acl,

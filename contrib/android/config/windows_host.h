@@ -905,12 +905,6 @@
 /* Define to 1 if you have the <winioctl.h> header file. */
 #define HAVE_WINIOCTL_H 1
 
-/* Define to 1 if you have the `wmemcmp' function. */
-#define HAVE_WMEMCMP 1
-
-/* Define to 1 if you have the `wmemcpy' function. */
-#define HAVE_WMEMCPY 1
-
 /* Define to 1 if you have a working EXT2_IOC_GETFLAGS */
 /* #undef HAVE_WORKING_EXT2_IOC_GETFLAGS */
 

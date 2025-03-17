@@ -66,14 +66,6 @@
 #include "archive_string.h"
 #include "archive_string_composition.h"
 
-#if !defined(HAVE_WMEMCPY) && !defined(wmemcpy)
-#define wmemcpy(a,b,i)  (wchar_t *)memcpy((a), (b), (i) * sizeof(wchar_t))
-#endif
-
-#if !defined(HAVE_WMEMMOVE) && !defined(wmemmove)
-#define wmemmove(a,b,i)  (wchar_t *)memmove((a), (b), (i) * sizeof(wchar_t))
-#endif
-
 #undef max
 #define max(a, b)       ((a)>(b)?(a):(b))
 

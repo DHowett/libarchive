@@ -11,6 +11,13 @@ IF NOT "%BE%"=="mingw-gcc" (
   )
 )
 
+IF "%BE%"=="msvc" (
+  FOR /f "usebackq delims=" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) DO (
+    ECHO "%%i"
+    CALL "%%i\VC\Auxiliary\Build\vcvars64.bat"
+  )
+)
+
 REM v1.5.6 has a bug with the CMake files & MSVC
 REM https://github.com/facebook/zstd/issues/3999
 REM Fall back to 1.5.5 for MSVC until fixed
@@ -127,7 +134,7 @@ IF "%1"=="deplibs" (
   ) ELSE IF "%BE%"=="msvc" (
     MKDIR build_ci\cmake
     CD build_ci\cmake
-    cmake -G "Visual Studio 17 2022" -D CMAKE_BUILD_TYPE="Release" -D ZLIB_LIBRARY="C:/Program Files (x86)/zlib/lib/zlibstatic.lib" -D ZLIB_INCLUDE_DIR="C:/Program Files (x86)/zlib/include" -D BZIP2_LIBRARIES="C:/Program Files (x86)/bzip2/lib/bz2_static.lib" -D BZIP2_INCLUDE_DIR="C:/Program Files (x86)/bzip2/include" -D LIBLZMA_LIBRARY="C:/Program Files (x86)/xz/lib/lzma.lib" -D LIBLZMA_INCLUDE_DIR="C:/Program Files (x86)/xz/include" -D ZSTD_LIBRARY="C:/Program Files (x86)/zstd/lib/zstd_static.lib" -D ZSTD_INCLUDE_DIR="C:/Program Files (x86)/zstd/include" ..\.. || EXIT /b 1
+    cmake -G "Ninja" -D CMAKE_BUILD_TYPE="Release" -D ZLIB_LIBRARY="C:/Program Files (x86)/zlib/lib/zlibstatic.lib" -D ZLIB_INCLUDE_DIR="C:/Program Files (x86)/zlib/include" -D BZIP2_LIBRARIES="C:/Program Files (x86)/bzip2/lib/bz2_static.lib" -D BZIP2_INCLUDE_DIR="C:/Program Files (x86)/bzip2/include" -D LIBLZMA_LIBRARY="C:/Program Files (x86)/xz/lib/lzma.lib" -D LIBLZMA_INCLUDE_DIR="C:/Program Files (x86)/xz/include" -D ZSTD_LIBRARY="C:/Program Files (x86)/zstd/lib/zstd_static.lib" -D ZSTD_INCLUDE_DIR="C:/Program Files (x86)/zstd/include" ..\.. || EXIT /b 1
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
     SET CYGWIN_NOWINPATH=1
@@ -140,7 +147,7 @@ IF "%1"=="deplibs" (
     mingw32-make -j %NUMBER_OF_PROCESSORS% VERBOSE=1 || EXIT /b 1
   ) ELSE IF "%BE%"=="msvc" (
     CD build_ci\cmake
-    cmake --build . --target ALL_BUILD --config Release || EXIT /b 1
+    cmake --build . --target all --config Release || EXIT /b 1
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
     SET MAKE_ARGS=-j
@@ -155,7 +162,7 @@ IF "%1"=="deplibs" (
     mingw32-make test VERBOSE=1 || EXIT /b 1
   ) ELSE IF "%BE%"=="msvc" (
     CD build_ci\cmake
-    cmake --build . --target RUN_TESTS --config Release || EXIT /b 1
+    cmake --build . --target test --config Release || EXIT /b 1
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     REM SET BS=cmake
     REM SET CYGWIN_NOWINPATH=1
@@ -171,7 +178,7 @@ IF "%1"=="deplibs" (
     mingw32-make install || EXIT /b 1
   ) ELSE IF "%BE%"=="msvc" (
     CD build_ci\cmake
-    cmake --build . --target INSTALL --config Release || EXIT /b 1
+    cmake --build . --target install --config Release || EXIT /b 1
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
     SET CYGWIN_NOWINPATH=1

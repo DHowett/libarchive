@@ -130,7 +130,7 @@ IF "%1"=="deplibs" (
     SET PATH=%MINGWPATH%
     MKDIR build_ci\cmake
     CD build_ci\cmake
-    cmake -G "MinGW Makefiles" -D ZLIB_LIBRARY="C:/Program Files (x86)/zlib/lib/libzlibstatic.a" -D ZLIB_INCLUDE_DIR="C:/Program Files (x86)/zlib/include" -D BZIP2_LIBRARIES="C:/Program Files (x86)/bzip2/lib/libbz2_static.a" -D BZIP2_INCLUDE_DIR="C:/Program Files (x86)/bzip2/include" -D LIBLZMA_LIBRARY="C:/Program Files (x86)/xz/lib/liblzma.a" -D LIBLZMA_INCLUDE_DIR="C:/Program Files (x86)/xz/include" -D ZSTD_LIBRARY="C:/Program Files (x86)/zstd/lib/libzstd.a" -D ZSTD_INCLUDE_DIR="C:/Program Files (x86)/zstd/include" ..\.. || EXIT /b 1
+    cmake -G "Ninja" -D ZLIB_LIBRARY="C:/Program Files (x86)/zlib/lib/libzlibstatic.a" -D ZLIB_INCLUDE_DIR="C:/Program Files (x86)/zlib/include" -D BZIP2_LIBRARIES="C:/Program Files (x86)/bzip2/lib/libbz2_static.a" -D BZIP2_INCLUDE_DIR="C:/Program Files (x86)/bzip2/include" -D LIBLZMA_LIBRARY="C:/Program Files (x86)/xz/lib/liblzma.a" -D LIBLZMA_INCLUDE_DIR="C:/Program Files (x86)/xz/include" -D ZSTD_LIBRARY="C:/Program Files (x86)/zstd/lib/libzstd.a" -D ZSTD_INCLUDE_DIR="C:/Program Files (x86)/zstd/include" ..\.. || EXIT /b 1
   ) ELSE IF "%BE%"=="msvc" (
     MKDIR build_ci\cmake
     CD build_ci\cmake
@@ -144,7 +144,7 @@ IF "%1"=="deplibs" (
   IF "%BE%"=="mingw-gcc" (
     SET PATH=%MINGWPATH%
     CD build_ci\cmake
-    mingw32-make -j %NUMBER_OF_PROCESSORS% VERBOSE=1 || EXIT /b 1
+    ninja || EXIT /b 1
   ) ELSE IF "%BE%"=="msvc" (
     CD build_ci\cmake
     cmake --build . --target all --config Release || EXIT /b 1
@@ -159,7 +159,7 @@ IF "%1"=="deplibs" (
     SET PATH=%MINGWPATH%
     CD build_ci\cmake
     SET SKIP_TEST_SPARSE=1
-    mingw32-make test VERBOSE=1 || EXIT /b 1
+    ninja test || EXIT /b 1
   ) ELSE IF "%BE%"=="msvc" (
     CD build_ci\cmake
     cmake --build . --target test --config Release || EXIT /b 1
@@ -175,7 +175,7 @@ IF "%1"=="deplibs" (
   IF "%BE%"=="mingw-gcc" (
     SET PATH=%MINGWPATH%
     CD build_ci\cmake
-    mingw32-make install || EXIT /b 1
+    ninja install || EXIT /b 1
   ) ELSE IF "%BE%"=="msvc" (
     CD build_ci\cmake
     cmake --build . --target install --config Release || EXIT /b 1

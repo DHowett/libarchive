@@ -22,7 +22,7 @@ IF "%BE%"=="msvc" (
 
 SET ORIGPATH=%PATH%
 IF "%BE%"=="mingw-gcc" (
-  SET MINGWPATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files\cmake\bin;C:\ProgramData\mingw64\mingw64\bin
+  SET MINGWPATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;D:\msys64\mingw64\bin;C:\Program Files\cmake\bin
 )
 
 IF "%1"=="deplibs" (

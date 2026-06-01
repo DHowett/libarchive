@@ -139,10 +139,17 @@ jobs:
           bison zlib-devel libbz2-devel liblzma-devel
           liblz4-devel libiconv-devel libxml2-devel
           libzstd-devel libssl-devel
-    - name: Install mingw
+    - name: Install MinGW (msys2)
+      uses: msys2/setup-msys2@e9898307ac31d1a803454791be09ab9973336e1c # v2.31.1
       if:  ${{ matrix.be=='mingw-gcc' }}
-      run: choco install mingw
-      shell: cmd
+      with:
+        location: "D:\\"
+        install: |-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-autotools
+          mingw-w64-x86_64-binutils
+          mingw-w64-x86_64-pkg-config
+          mingw-w64-x86_64-make
     - name: Install library dependencies
       run: ./build/ci/github_actions/ci.cmd deplibs
       shell: cmd

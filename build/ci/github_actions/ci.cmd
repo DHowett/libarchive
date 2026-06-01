@@ -137,6 +137,7 @@ IF "%1"=="deplibs" (
     cmake -G "Ninja" -D CMAKE_BUILD_TYPE="Release" -D ZLIB_LIBRARY="C:/Program Files (x86)/zlib/lib/zlibstatic.lib" -D ZLIB_INCLUDE_DIR="C:/Program Files (x86)/zlib/include" -D BZIP2_LIBRARIES="C:/Program Files (x86)/bzip2/lib/bz2_static.lib" -D BZIP2_INCLUDE_DIR="C:/Program Files (x86)/bzip2/include" -D LIBLZMA_LIBRARY="C:/Program Files (x86)/xz/lib/lzma.lib" -D LIBLZMA_INCLUDE_DIR="C:/Program Files (x86)/xz/include" -D ZSTD_LIBRARY="C:/Program Files (x86)/zstd/lib/zstd_static.lib" -D ZSTD_INCLUDE_DIR="C:/Program Files (x86)/zstd/include" ..\.. || EXIT /b 1
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
+    SET CMAKE_ARGS=-GNinja
     SET CYGWIN_NOWINPATH=1
     D:\cygwin\bin\bash.exe --login -c "cd '%cd%'; ./build/ci/build.sh -a configure" || EXIT /b 1
   )
@@ -150,7 +151,7 @@ IF "%1"=="deplibs" (
     cmake --build . --target all --config Release || EXIT /b 1
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
-    SET MAKE_ARGS=-j
+    SET MAKE=ninja
     SET CYGWIN_NOWINPATH=1
     D:\cygwin\bin\bash.exe --login -c "cd '%cd%'; ./build/ci/build.sh -a build" || EXIT /b 1
   )
@@ -166,6 +167,7 @@ IF "%1"=="deplibs" (
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     REM SET BS=cmake
     REM SET CYGWIN_NOWINPATH=1
+    REM SET MAKE=ninja
     REM SET SKIP_TEST_SPARSE=1
     ECHO "Skipping tests on this platform"
     REM D:\cygwin\bin\bash.exe --login -c "cd '%cd%'; ./build/ci/build.sh -a test" || EXIT /b 1
@@ -181,6 +183,7 @@ IF "%1"=="deplibs" (
     cmake --build . --target install --config Release || EXIT /b 1
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
+    SET MAKE=ninja
     SET CYGWIN_NOWINPATH=1
     D:\cygwin\bin\bash.exe --login -c "cd '%cd%'; ./build/ci/build.sh -a install" || EXIT /b 1
     REM Exit early here; the build.sh install step for Cygwin prints the version.
@@ -190,6 +193,7 @@ IF "%1"=="deplibs" (
 ) ELSE IF "%1"=="artifact" (
   IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
+    SET MAKE=ninja
     SET CYGWIN_NOWINPATH=1
     D:\cygwin\bin\bash.exe --login -c "cd '%cd%'; ./build/ci/build.sh -a artifact" || EXIT /b 1
     EXIT /b 0

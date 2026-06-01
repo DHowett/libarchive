@@ -21,6 +21,7 @@ fi
 
 BS="${BS:-autotools}"
 MAKE="${MAKE:-make}"
+MAKE_ARGS="${MAKE_ARGS:-}"
 CMAKE="${CMAKE:-cmake}"
 CMAKE_ARGS="${CMAKE_ARGS:-}"
 CONFIGURE_ARGS="${CONFIGURE_ARGS:-}"
@@ -91,7 +92,7 @@ esac
 if [ -z "${MAKE_ARGS:-}" ]; then
 	if [ "${BS}" = "autotools" ]; then
 		MAKE_ARGS="V=1"
-	elif [ "${BS}" = "cmake" ]; then
+	elif [ "${BS}" = "cmake" -a "${MAKE}" != "ninja" ]; then
 		MAKE_ARGS="VERBOSE=1"
 	fi
 fi
@@ -133,7 +134,7 @@ for action in ${ACTIONS}; do
 		configure)
 			case "${BS}" in
 				autotools) "${SRCDIR}/configure" ${CONFIGURE_ARGS} ;;
-				cmake) ${CMAKE} ${CMAKE_ARGS} "${SRCDIR}" ;;
+				cmake) ${CMAKE} ${CMAKE_ARGS} "${SRCDIR}" -DDESTDIR="${BUILDDIR}/destdir" ;;
 			esac
 			RET="$?"
 		;;
@@ -154,7 +155,7 @@ for action in ${ACTIONS}; do
 			find ${TMPDIR:-/tmp} -path '*_test.*' -name '*.log' -print -exec cat {} \; 2>/dev/null || /bin/true
 		;;
 		install)
-			${MAKE} ${MAKE_ARGS} install DESTDIR="${BUILDDIR}/destdir"
+			DESTDIR="${BUILDDIR}/destdir" ${MAKE} ${MAKE_ARGS} install
 			RET="$?"
 			cd "${BUILDDIR}/destdir" && ls -lR .
 			./usr/local/bin/bsdtar --version

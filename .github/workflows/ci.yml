@@ -138,7 +138,7 @@ jobs:
           gcc-core binutils libtool pkg-config
           bison zlib-devel libbz2-devel liblzma-devel
           liblz4-devel libiconv-devel libxml2-devel
-          libzstd-devel libssl-devel
+          libzstd-devel libssl-devel ninja
     - name: Install MinGW (msys2)
       uses: msys2/setup-msys2@e9898307ac31d1a803454791be09ab9973336e1c # v2.31.1
       if:  ${{ matrix.be=='mingw-gcc' }}

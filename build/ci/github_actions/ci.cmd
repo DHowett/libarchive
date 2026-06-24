@@ -13,6 +13,20 @@ IF "%BE%"=="mingw-gcc" (
   SET MINGWPATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;D:\msys64\mingw64\bin;C:\Program Files\cmake\bin
 )
 
+REM "make install" deploys to the 32-bit program files folder
+REM (MSVC) unless -A x64 is specified or (MinGW) always.
+SET INSTALL_ROOT=C:\Program Files (x86)
+IF "%BE%"=="msvc" (
+  SET BUILD_ARCH=x64
+  SET VCPKG_ARCH=x64
+  IF "%BITNESS%"=="32" (
+    SET BUILD_ARCH=Win32
+    SET VCPKG_ARCH=x86
+  ) ELSE (
+    SET INSTALL_ROOT=C:\Program Files
+  )
+)
+
 IF "%1%"=="configure" (
   IF "%BE%"=="mingw-gcc" (
     SET PATH=%MINGWPATH%
@@ -22,7 +36,7 @@ IF "%1%"=="configure" (
   ) ELSE IF "%BE%"=="msvc" (
     MKDIR build_ci\cmake
     CD build_ci\cmake
-    cmake -G "Visual Studio 17 2022" -D CMAKE_BUILD_TYPE="Release" --toolchain "%VCPKG_INSTALLATION_ROOT%\scripts\buildsystems\vcpkg.cmake" -D VCPKG_TARGET_TRIPLET=x64-windows-static -D VCPKG_MANIFEST_DIR=%GITHUB_WORKSPACE%\build\ci\github_actions ..\.. || EXIT /b 1
+    cmake -A %BUILD_ARCH% -G "Visual Studio 17 2022" -D CMAKE_BUILD_TYPE="Release" --toolchain "%VCPKG_INSTALLATION_ROOT%\scripts\buildsystems\vcpkg.cmake" -D VCPKG_TARGET_TRIPLET=%VCPKG_ARCH%-windows-static -D VCPKG_MANIFEST_DIR=%GITHUB_WORKSPACE%\build\ci\github_actions ..\.. || EXIT /b 1
   ) ELSE IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
     SET CYGWIN_NOWINPATH=1
@@ -74,7 +88,7 @@ IF "%1%"=="configure" (
     REM Exit early here; the build.sh install step for Cygwin prints the version.
     EXIT /b 0
   )
-  "C:\Program Files (x86)\libarchive\bin\bsdtar.exe" --version
+  "%INSTALL_ROOT%\libarchive\bin\bsdtar.exe" --version || EXIT /b 1
 ) ELSE IF "%1"=="artifact" (
   IF "%BE%"=="cygwin-gcc" (
     SET BS=cmake
@@ -83,7 +97,7 @@ IF "%1%"=="configure" (
     EXIT /b 0
   )
 
-  C:\windows\system32\tar.exe -c -C "C:\Program Files (x86)" --format=zip -f libarchive.zip libarchive
+  C:\windows\system32\tar.exe -c -C "%INSTALL_ROOT%" --format=zip -f libarchive.zip libarchive
 ) ELSE (
   ECHO "Usage: %0% deplibs|configure|build|test|install|artifact"
   @EXIT /b 0

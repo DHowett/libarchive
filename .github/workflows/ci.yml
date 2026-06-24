@@ -147,6 +147,8 @@ jobs:
       fail-fast: false
       matrix:
         be: [mingw-gcc, cygwin-gcc, msvc]
+    env:
+      BE: ${{ matrix.be }}
     steps:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
     - name: Install Cygwin
@@ -179,29 +181,20 @@ jobs:
     - name: Configure
       run: ./build/ci/github_actions/ci.cmd configure
       shell: cmd
-      env:
-        BE: ${{ matrix.be }}
     - name: Build
       run: ./build/ci/github_actions/ci.cmd build
       shell: cmd
-      env:
-        BE: ${{ matrix.be }}
     - name: Test
       run: ./build/ci/github_actions/ci.cmd test
       shell: cmd
       env:
-        BE: ${{ matrix.be }}
         CTEST_OUTPUT_ON_FAILURE: ON
     - name: Install
       run: ./build/ci/github_actions/ci.cmd install
       shell: cmd
-      env:
-        BE: ${{ matrix.be }}
     - name: Artifact
       run: ./build/ci/github_actions/ci.cmd artifact
       shell: cmd
-      env:
-        BE: ${{ matrix.be }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: libarchive-windows-${{ matrix.be }}-${{ github.sha }}

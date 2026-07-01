@@ -579,7 +579,7 @@ get_data_offset(struct archive_read *a, int64_t *data_offset, int compat)
 			continue;
 		}
 		p = buff + offset;
-		while (p + 32 < buff + bytes_avail) {
+		while (buff + bytes_avail - p >= 32) {
 			size_t step = check_7zip_header_in_sfx(p);
 			if (step == 0) {
 				*data_offset = p - buff;
@@ -776,7 +776,7 @@ get_elf_sfx_offset(struct archive_read *a, int64_t *sfx_offset, int compat)
 			e_shentsize = (*dec16)(h + 0x3A);
 			e_shnum = (*dec16)(h + 0x3C);
 			e_shstrndx = (*dec16)(h + 0x3E);
-			if (e_shnum < e_shstrndx || e_shentsize < 0x28)
+			if (e_shnum <= e_shstrndx || e_shentsize < 0x28)
 				break;
 
 		} else {
@@ -784,7 +784,7 @@ get_elf_sfx_offset(struct archive_read *a, int64_t *sfx_offset, int compat)
 			e_shentsize = (*dec16)(h + 0x2E);
 			e_shnum = (*dec16)(h + 0x30);
 			e_shstrndx = (*dec16)(h + 0x32);
-			if (e_shnum < e_shstrndx || e_shentsize < 0x18)
+			if (e_shnum <= e_shstrndx || e_shentsize < 0x18)
 				break;
 		}
 
@@ -838,7 +838,7 @@ get_elf_sfx_offset(struct archive_read *a, int64_t *sfx_offset, int compat)
 			return (ARCHIVE_FATAL);
 		}
 		size_t data_sym_offset = strtab_size;
-		for (size_t offset = 0; offset < strtab_size - 6; offset++) {
+		for (size_t offset = 0; offset + 6 <= strtab_size; offset++) {
 			if (memcmp(h + offset, ".data\00", 6) == 0) {
 				data_sym_offset = offset;
 				break;
@@ -2994,11 +2994,9 @@ read_Header(struct archive_read *a, struct _7z_header_info *h,
 				return (-1);
 			if (allAreDefined)
 				memset(h->attrBools, 1, zip->numFiles);
-			else {
-				if (read_Bools(a, h->attrBools,
-				      zip->numFiles) < 0)
-					return (-1);
-			}
+			else if (read_Bools(a, h->attrBools,
+			    zip->numFiles) < 0)
+				return (-1);
 			for (i = 0; i < zip->numFiles; i++) {
 				if (h->attrBools[i]) {
 					if ((p = header_bytes(a, 4)) == NULL)
@@ -3062,14 +3060,10 @@ read_Header(struct archive_read *a, struct _7z_header_info *h,
 			entries[i].ssIndex = sindex;
 			sindex++;
 		} else {
-			int dir;
-			if (h->emptyFileBools == NULL)
-				dir = 1;
-			else {
-				if (h->emptyFileBools[eindex])
-					dir = 0;
-				else
-					dir = 1;
+			int dir = 1;
+
+			if (h->emptyFileBools != NULL) {
+				dir = !h->emptyFileBools[eindex];
 				eindex++;
 			}
 			if (entries[i].mode == 0) {
@@ -3145,10 +3139,8 @@ read_Times(struct archive_read *a, int type)
 	allAreDefined = *p;
 	if (allAreDefined)
 		memset(timeBools, 1, zip->numFiles);
-	else {
-		if (read_Bools(a, timeBools, zip->numFiles) < 0)
-			goto failed;
-	}
+	else if (read_Bools(a, timeBools, zip->numFiles) < 0)
+		goto failed;
 
 	/* Read external. */
 	if ((p = header_bytes(a, 1)) == NULL)
@@ -3953,15 +3945,11 @@ setup_decode_folder(struct archive_read *a, struct _7z_folder *folder,
 				}
 			}
 			coder2 = &(fc[3]);
-			zip->main_stream_bytes_remaining =
-				folder->unPackSize[2];
 			remaining = folder->unPackSize[2];
 		} else if (coder2 != NULL && coder2->codec == _7Z_X86_BCJ2 &&
 		    zip->pack_stream_remaining == 4 &&
 		    folder->numInStreams == 5 && folder->numOutStreams == 2) {
 			/* Source type 0 made by 7z */
-			zip->main_stream_bytes_remaining =
-				folder->unPackSize[0];
 			remaining = folder->unPackSize[0];
 		} else {
 			/* We got an unexpected form. */

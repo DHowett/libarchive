@@ -82,7 +82,7 @@ DEFINE_TEST(test_option_H_upper)
 	assertIsDir("ld1", umasked(0755));
 	assertIsSymlink("d1/linkX", "fileX", 0);
 	assertIsSymlink("d1/link1", "file1", 0);
-	assertIsReg("link2", umasked(0644));
+	assertIsSymlink("link2", "d1/file2", 0);
 	assertIsSymlink("linkY", "d1/fileY", 0);
 	assertChdir("..");
 #endif

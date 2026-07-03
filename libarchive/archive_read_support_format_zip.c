@@ -84,12 +84,16 @@
 /* maximum length of Mac metadata in MiB */
 #define ZIP_MAX_METADATA	10U
 
+#define ENTRY_UNCOMPRESSED_SIZE_MASK64	UINT64_MAX
+#define ENTRY_UNCOMPRESSED_SIZE_MASK32	UINT32_MAX
+
 struct zip_entry {
 	struct archive_rb_node	node;
 	struct zip_entry	*next;
 	int64_t			local_header_offset;
 	int64_t			compressed_size;
 	int64_t			uncompressed_size;
+	int64_t			uncompressed_size_valid_mask;
 	int64_t			gid;
 	int64_t			uid;
 	struct archive_string	rsrcname;
@@ -710,6 +714,7 @@ process_extra(struct archive_read *a, struct archive_entry *entry,
 					return ARCHIVE_FAILED;
 				}
 				zip_entry->uncompressed_size = t;
+				zip_entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK64;
 				offset += 8;
 				datasize -= 8;
 			}
@@ -1138,6 +1143,7 @@ zip_read_local_file_header(struct archive_read *a, struct archive_entry *entry,
 		zip_entry->decdat = p[17];
 	zip_entry->compressed_size = archive_le32dec(p + 18);
 	zip_entry->uncompressed_size = archive_le32dec(p + 22);
+	zip_entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK32;
 	filename_length = archive_le16dec(p + 26);
 	extra_length = archive_le16dec(p + 28);
 
@@ -1429,6 +1435,7 @@ zip_read_local_file_header(struct archive_read *a, struct archive_entry *entry,
 			}
 		}
 		zip_entry->uncompressed_size = zip_entry->compressed_size = 0;
+		zip_entry->uncompressed_size_valid_mask = 0;
 
 		if (__archive_read_consume(a, linkname_length) < 0) {
 			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
@@ -1638,6 +1645,7 @@ consume_end_of_file_marker(struct archive_read *a, struct zip *zip)
 		}
 		zip->entry->compressed_size = compressed_actual;
 		zip->entry->uncompressed_size = uncompressed_actual;
+		zip->entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK64;
 		zip->unconsumed += 24;
 		return;
 	}
@@ -1653,6 +1661,7 @@ consume_end_of_file_marker(struct archive_read *a, struct zip *zip)
 		}
 		zip->entry->compressed_size = compressed_actual;
 		zip->entry->uncompressed_size = uncompressed_actual;
+		zip->entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK64;
 		zip->unconsumed += 20;
 		return;
 	}
@@ -1669,6 +1678,7 @@ consume_end_of_file_marker(struct archive_read *a, struct zip *zip)
 		}
 		zip->entry->compressed_size = compressed_actual;
 		zip->entry->uncompressed_size = uncompressed_actual;
+		zip->entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK32;
 		zip->unconsumed += 16;
 		return;
 	}
@@ -1684,6 +1694,7 @@ consume_end_of_file_marker(struct archive_read *a, struct zip *zip)
 		}
 		zip->entry->compressed_size = compressed_actual;
 		zip->entry->uncompressed_size = uncompressed_actual;
+		zip->entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK32;
 		zip->unconsumed += 12;
 		return;
 	}
@@ -1704,6 +1715,7 @@ consume_end_of_file_marker(struct archive_read *a, struct zip *zip)
 		    || sig == 0x06054b50U) /* End of central directory */ {
 			zip->entry->compressed_size = compressed_actual;
 			zip->entry->uncompressed_size = uncompressed_actual;
+			zip->entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK64;
 			return;
 		}
 	}
@@ -1744,15 +1756,18 @@ consume_end_of_file_marker(struct archive_read *a, struct zip *zip)
 		/* Both 32-bit fields match */
 		zip->entry->compressed_size = compressed32;
 		zip->entry->uncompressed_size = uncompressed32;
+		zip->entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK32;
 	} else if (compressed64 == compressed_actual
 		   || uncompressed64 == uncompressed_actual) {
 		/* One or both 64-bit fields match */
 		zip->entry->compressed_size = compressed64;
 		zip->entry->uncompressed_size = uncompressed64;
+		zip->entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK64;
 	} else {
 		/* Zero or one 32-bit fields match */
 		zip->entry->compressed_size = compressed32;
 		zip->entry->uncompressed_size = uncompressed32;
+		zip->entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK32;
 	}
 }
 
@@ -3458,8 +3473,8 @@ archive_read_format_zip_read_data(struct archive_read *a,
 		}
 		/* Size field only stores the lower 32 bits of the actual
 		 * size. */
-		if ((zip->entry->uncompressed_size & UINT32_MAX)
-		    != (zip->entry_uncompressed_bytes_read & UINT32_MAX)) {
+		if ((zip->entry->uncompressed_size & zip->entry->uncompressed_size_valid_mask)
+		    != (zip->entry_uncompressed_bytes_read & zip->entry->uncompressed_size_valid_mask)) {
 			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
 			    "ZIP uncompressed data is wrong size "
 			    "(read %jd, expected %jd)",
@@ -4247,6 +4262,7 @@ slurp_central_directory(struct archive_read *a, struct archive_entry* entry,
 			zip_entry->decdat = p[19];
 		zip_entry->compressed_size = archive_le32dec(p + 20);
 		zip_entry->uncompressed_size = archive_le32dec(p + 24);
+		zip_entry->uncompressed_size_valid_mask = ENTRY_UNCOMPRESSED_SIZE_MASK32;
 		filename_length = archive_le16dec(p + 28);
 		extra_length = archive_le16dec(p + 30);
 		comment_length = archive_le16dec(p + 32);
